@@ -1,5 +1,5 @@
 const { body } = require('express-validator');
-const userModel = require('../models/userModel');
+const userModel = require('../model/userModel');
 
 const isEmailUnique = async (email) => {
   const existingUser = userModel.getAllUsers().find(user => user.email === email);

@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const userController = require('../controllers/userController');
+const userController = require('../controller/userController');
 const { authenticateToken } = require('../middleware/auth');
 const authorizeRole = require('../middleware/authorizeRole');
-const { createUserValidator, updateUserValidator } = require('../validators/userValidator');
+const { createUserValidator, updateUserValidator } = require('../validator/userValidator');
 const validateRequest = require('../middleware/validateRequest');
 
 router.post('/login', userController.loginUser);
