@@ -3,15 +3,15 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 const { authenticateToken } = require('../middleware/auth');
 const authorizeRole = require('../middleware/authorizeRole');
+const { createUserValidator, updateUserValidator } = require('../validators/userValidator');
+const validateRequest = require('../middleware/validateRequest');
 
-// Public routes
 router.post('/login', userController.loginUser);
-router.post('/', userController.createUser);
+router.post('/', createUserValidator, validateRequest, userController.createUser);
 
-// Protected routes
 router.get('/', authenticateToken, userController.getAllUsers);
 router.get('/:id', authenticateToken, userController.getUserById);
-router.put('/:id', authenticateToken, userController.updateUser);
-router.delete('/:id', authenticateToken,authorizeRole('admin'), userController.deleteUser);
+router.put('/:id', authenticateToken, updateUserValidator, validateRequest, userController.updateUser);
+router.delete('/:id', authenticateToken, authorizeRole('admin'), userController.deleteUser);
 
 module.exports = router;
