@@ -7,7 +7,7 @@ const { createUserValidator, updateUserValidator } = require('../validator/userV
 const validateRequest = require('../middleware/validateRequest');
 
 router.post('/login', userController.loginUser);
-router.post('/', createUserValidator, validateRequest, userController.createUser);
+router.post('/', createUserValidator, validateRequest,userController.createUser);
 
 router.get('/', authenticateToken, userController.getAllUsers);
 router.get('/:id', authenticateToken, userController.getUserById);

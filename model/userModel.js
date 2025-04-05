@@ -1,3 +1,4 @@
+const bcrypt=require('bcryptjs')
 let users = [];
 let nextId = 1;
 
@@ -9,12 +10,13 @@ function getUserById(id) {
     return users.find(user => user.id === id);
 }
 
-function createUser(data) {
+async function createUser(data) {
+    password=await bcrypt.hash(data.password,12) 
     const newUser = {
         id: nextId++,
         name: data.name,
         email: data.email,
-        password: data.password,
+        password:password,
         role: data.role || 'user' // default: 'user'
     };
     users.push(newUser);

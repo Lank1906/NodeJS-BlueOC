@@ -1,12 +1,13 @@
 const jwt = require('jsonwebtoken');
 const userModel = require('../model/userModel');
+const bcrypt=require('bcryptjs')
 
-exports.createUser = (req, res) => {
+exports.createUser =async (req, res) => {
     const { name, email, password } = req.body;
     if (!name || !email || !password) {
         return res.status(400).json({ message: 'Missing required fields' });
     }
-    const newUser = userModel.createUser({ name, email, password });
+    const newUser =await userModel.createUser(req.body);
     res.status(201).json(newUser);
 };
 
@@ -37,7 +38,7 @@ exports.deleteUser = (req, res) => {
 exports.loginUser = (req, res) => {
     const { email, password } = req.body;
 
-    const user = userModel.getAllUsers().find(u => u.email === email && u.password === password);
+    const user = userModel.getAllUsers().find(u => u.email === email && bcrypt.compare(password,u.password));
     if (!user) {
         return res.status(401).json({ message: 'Invalid email or password' });
     }
