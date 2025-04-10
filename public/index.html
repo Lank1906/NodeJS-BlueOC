@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Library Admin</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f6f9;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 30px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    h2, h3 {
+      color: #333;
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 6px 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #007BFF;
+      border: none;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .error {
+      color: red;
+    }
+
+    .success {
+      color: green;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    ul {
+      padding-left: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container" id="login-section">
+    <h2>Login</h2>
+    <input type="text" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
+    <button onclick="login()">Login</button>
+    <div id="login-error" class="error"></div>
+  </div>
+
+  <div class="container hidden" id="admin-section">
+    <h2>Welcome to Admin Dashboard</h2>
+
+    <h3>📚 All Books</h3>
+    <button onclick="loadAllBooks()">🔄 Reload All Books</button>
+    <table id="all-books">
+      <thead><tr><th>ID</th><th>Title</th><th>Author</th><th>Genre</th><th>Year</th></tr></thead>
+      <tbody></tbody>
+    </table>
+
+    <h3>🔍 Search Books</h3>
+    <input type="text" id="search-query" placeholder="Enter book title" />
+    <button onclick="searchBooks()">Search</button>
+    <ul id="search-results"></ul>
+
+    <h3>➕ Add New Book</h3>
+    <input type="text" id="title" placeholder="Title" />
+    <input type="text" id="author" placeholder="Author" />
+    <input type="text" id="genre" placeholder="Genre" />
+    <input type="number" id="year" placeholder="Published Year" />
+    <button onclick="addBook()">Add Book</button>
+    <div id="add-success" class="success"></div>
+
+    <h3>🔥 Top 5 Most Borrowed Books</h3>
+    <table id="top-books">
+      <thead><tr><th>Title</th><th>Times Borrowed</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const API_BASE = 'https://ho-ng-b-i-1.paiza-user-free.cloud:3000';
+    let token = '';
+
+    function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      fetch(`${API_BASE}/users/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ "email":email,"password": password })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.token) {
+          token = data.token;
+          document.getElementById('login-section').classList.add('hidden');
+          document.getElementById('admin-section').classList.remove('hidden');
+          loadAllBooks();
+          loadTopBooks();
+        } else {
+          document.getElementById('login-error').innerText = data.message || 'Login failed';
+        }
+      });
+    }
+
+    function loadAllBooks() {
+      fetch(`${API_BASE}/books`, {
+        headers: { Authorization: 'Bearer ' + token }
+      })
+      .then(res => res.json())
+      .then(data => {
+        const tbody = document.querySelector('#all-books tbody');
+        tbody.innerHTML = '';
+        data.forEach(book => {
+          const row = `<tr>
+            <td>${book.id}</td>
+            <td>${book.title}</td>
+            <td>${book.author}</td>
+            <td>${book.genre}</td>
+            <td>${book.published_year}</td>
+          </tr>`;
+          tbody.innerHTML += row;
+        });
+      });
+    }
+
+    function searchBooks() {
+      const query = document.getElementById('search-query').value;
+      fetch(`${API_BASE}/books`, {
+        headers: { Authorization: 'Bearer ' + token }
+      })
+      .then(res => res.json())
+      .then(data => {
+        const filtered = data.filter(book =>
+          book.title.toLowerCase().includes(query.toLowerCase()));
+        const list = document.getElementById('search-results');
+        list.innerHTML = '';
+        filtered.forEach(book => {
+          const li = document.createElement('li');
+          li.innerText = `${book.title} by ${book.author}`;
+          list.appendChild(li);
+        });
+      });
+    }
+
+    function addBook() {
+      const title = document.getElementById('title').value;
+      const author = document.getElementById('author').value;
+      const genre = document.getElementById('genre').value;
+      const year = document.getElementById('year').value;
+
+      fetch(`${API_BASE}/books`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + token
+        },
+        body: JSON.stringify({ title, author, genre, published_year: parseInt(year) })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.title) {
+          document.getElementById('add-success').innerText = '✅ Book added successfully!';
+          document.getElementById('title').value = '';
+          document.getElementById('author').value = '';
+          document.getElementById('genre').value = '';
+          document.getElementById('year').value = '';
+          loadAllBooks();
+          loadTopBooks();
+        }
+      });
+    }
+
+    function loadTopBooks() {
+      fetch(`${API_BASE}/books/most-borrowed`, {
+        headers: { Authorization: 'Bearer ' + token }
+      })
+      .then(res => res.json())
+      .then(data => {
+        const tbody = document.querySelector('#top-books tbody');
+        tbody.innerHTML = '';
+        data.forEach(book => {
+          const row = `<tr><td>${book.title}</td><td>${book.most_borrowed}</td></tr>`;
+          tbody.innerHTML += row;
+        });
+      });
+    }
+  </script>
+
+</body>
+</html>
